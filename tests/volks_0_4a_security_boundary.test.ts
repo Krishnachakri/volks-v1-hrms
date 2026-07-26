@@ -57,6 +57,12 @@ async function createV04AServer() {
           const sessionToken = `bearer-token-${Date.now()}-${Math.random().toString(36).substring(7)}`;
           const user = userRes.rows[0];
 
+          const expiresAt = new Date(Date.now() + 3600000).toISOString();
+          await db.query(
+            `INSERT INTO sessions (token_hash, person_id, org_id, role, email, expires_at) VALUES ($1, $2, $3, $4, $5, $6);`,
+            [sessionToken, user.person_id, 'ORG-1001', user.email.includes('bose') ? 'HR_ADMIN' : 'EMPLOYEE', user.email, expiresAt]
+          ).catch(() => {});
+
           testSessions[sessionToken] = {
             personId: user.person_id,
             orgId: 'ORG-1001',
@@ -138,6 +144,7 @@ async function createV04AServer() {
           const { personId } = JSON.parse(body);
           await db.query(`UPDATE employment_engagements SET state = 'TERMINATED' WHERE person_id = $1;`, [personId]);
           await db.query(`UPDATE users SET is_active = false WHERE person_id = $1;`, [personId]);
+          await db.query(`UPDATE sessions SET revoked_at = NOW() WHERE person_id = $1;`, [personId]).catch(() => {});
 
           for (const t in testSessions) {
             if (testSessions[t].personId === personId) {

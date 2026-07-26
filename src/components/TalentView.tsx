@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Award, Briefcase, UserCheck, Star, FileText, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Award, Briefcase, UserCheck, Star, FileText, CheckCircle2, ChevronRight, Shield } from 'lucide-react';
+import { CandidateIntelligenceView } from './CandidateIntelligenceView';
 
 interface Candidate {
   id: string;
@@ -17,7 +18,7 @@ const INITIAL_CANDIDATES: Candidate[] = [
 ];
 
 export const TalentView: React.FC<{ person: any }> = ({ person }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'recruitment' | 'appraisals'>('recruitment');
+  const [activeSubTab, setActiveSubTab] = useState<'ats' | 'recruitment' | 'appraisals'>('ats');
   const [candidates, setCandidates] = useState<Candidate[]>(INITIAL_CANDIDATES);
   const [appraisalRating, setAppraisalRating] = useState<number>(4);
   const [appraisalFeedback, setAppraisalFeedback] = useState<string>('Exceeds expectations in system design and bitemporal ledger maintenance.');
@@ -44,6 +45,25 @@ export const TalentView: React.FC<{ person: any }> = ({ person }) => {
       {/* Sub-Navigation Tabs */}
       <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '12px' }}>
         <button
+          onClick={() => setActiveSubTab('ats')}
+          style={{
+            background: activeSubTab === 'ats' ? '#0F172A' : '#FFFFFF',
+            color: activeSubTab === 'ats' ? '#FFFFFF' : '#64748B',
+            border: '1px solid #CBD5E1',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontWeight: '700',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <Shield size={16} color={activeSubTab === 'ats' ? '#38BDF8' : '#64748B'} />
+          Candidate Intelligence & ATS
+        </button>
+        <button
           onClick={() => setActiveSubTab('recruitment')}
           style={{
             background: activeSubTab === 'recruitment' ? '#4F46E5' : '#FFFFFF',
@@ -59,9 +79,9 @@ export const TalentView: React.FC<{ person: any }> = ({ person }) => {
             gap: '8px',
           }}
         >
-          <Briefcase size={15} /> Recruitment Pipeline (Reference hrms-requisition.png)
+          <Briefcase size={16} />
+          Recruitment Pipeline Kanban
         </button>
-
         <button
           onClick={() => setActiveSubTab('appraisals')}
           style={{
@@ -78,98 +98,121 @@ export const TalentView: React.FC<{ person: any }> = ({ person }) => {
             gap: '8px',
           }}
         >
-          <Award size={15} /> Performance Appraisals (Reference hrms-appraisal.png)
+          <Award size={16} />
+          Performance Appraisals
         </button>
       </div>
 
       {notice && (
-        <div style={{ background: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', padding: '12px 16px', borderRadius: '8px', fontWeight: '700', fontSize: '13px' }}>
+        <div style={{ padding: '12px 16px', borderRadius: '8px', background: '#DCFCE7', color: '#166534', fontWeight: '600', fontSize: '13px' }}>
           ✓ {notice}
         </div>
       )}
 
-      {/* RECRUITMENT PIPELINE */}
+      {/* SUB-TAB 1: CANDIDATE INTELLIGENCE & ATS */}
+      {activeSubTab === 'ats' && (
+        <CandidateIntelligenceView
+          onHireCandidate={(cand) => {
+            setNotice(`Candidate ${cand.fullName} hired cleanly into ${cand.jobTitle} position.`);
+          }}
+        />
+      )}
+
+      {/* SUB-TAB 2: RECRUITMENT PIPELINE KANBAN */}
       {activeSubTab === 'recruitment' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-          {(['APPLIED', 'INTERVIEW', 'OFFERED', 'HIRED'] as Candidate['stage'][]).map((stage) => (
-            <div key={stage} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#0F172A' }}>{stage}</span>
-                <span style={{ background: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>
-                  {candidates.filter((c) => c.stage === stage).length}
-                </span>
+          {(['APPLIED', 'INTERVIEW', 'OFFERED', 'HIRED'] as const).map((stage) => {
+            const list = candidates.filter((c) => c.stage === stage);
+            return (
+              <div key={stage} style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>{stage}</span>
+                  <span style={{ fontSize: '12px', background: '#F1F5F9', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>
+                    {list.length}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {list.map((cand) => (
+                    <div key={cand.id} style={{ padding: '12px', border: '1px solid #E2E8F0', borderRadius: '6px', background: '#FAFAFA' }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#0F172A' }}>{cand.name}</div>
+                      <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>{cand.position}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                        <span style={{ fontSize: '11px', color: '#6366F1', fontWeight: '600' }}>★ {cand.rating}</span>
+                        {stage !== 'HIRED' && (
+                          <button
+                            onClick={() => handleHireCandidate(cand)}
+                            style={{
+                              background: '#4F46E5',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Hire
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              {candidates
-                .filter((c) => c.stage === stage)
-                .map((cand) => (
-                  <div key={cand.id} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ fontWeight: '800', fontSize: '14px', color: '#0F172A' }}>{cand.name}</div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>{cand.position}</div>
-                    <div style={{ fontSize: '11px', color: '#94A3B8' }}>{cand.department} • Rating: ⭐ {cand.rating}</div>
-
-                    {stage === 'OFFERED' && (
-                      <button
-                        onClick={() => handleHireCandidate(cand)}
-                        style={{ background: '#059669', color: '#FFFFFF', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', marginTop: '4px' }}
-                      >
-                        Hire & Onboard Candidate
-                      </button>
-                    )}
-                  </div>
-                ))}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* PERFORMANCE APPRAISALS */}
+      {/* SUB-TAB 3: PERFORMANCE APPRAISALS */}
       {activeSubTab === 'appraisals' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', maxWidth: '700px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '18px', color: '#0F172A', fontWeight: '800' }}>Annual Performance Appraisal Review 2026</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>Evaluate core competencies, goal completion, and leadership feedback.</p>
-          </div>
-
+        <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px', maxWidth: '600px' }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: '#0F172A' }}>
+            Annual Performance Appraisal Review 2026
+          </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ fontSize: '13px', fontWeight: '700', color: '#0F172A', display: 'block', marginBottom: '8px' }}>Overall Performance Rating (1 to 5)</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setAppraisalRating(star)}
-                    style={{
-                      background: star <= appraisalRating ? '#FEF3C7' : '#F1F5F9',
-                      color: star <= appraisalRating ? '#D97706' : '#94A3B8',
-                      border: '1px solid #CBD5E1',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ⭐ {star}
-                  </button>
-                ))}
-              </div>
+              <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
+                Overall Rating (1 - 5 Stars)
+              </label>
+              <select
+                value={appraisalRating}
+                onChange={(e) => setAppraisalRating(Number(e.target.value))}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E1' }}
+              >
+                <option value={5}>5 ★★★★★ — Exceptional Exceeds Expectations</option>
+                <option value={4}>4 ★★★★☆ — Exceeds Expectations</option>
+                <option value={3}>3 ★★★☆☆ — Meets Expectations</option>
+                <option value={2}>2 ★★☆☆☆ — Needs Improvement</option>
+                <option value={1}>1 ★☆☆☆☆ — Unsatisfactory</option>
+              </select>
             </div>
-
             <div>
-              <label style={{ fontSize: '13px', fontWeight: '700', color: '#0F172A', display: 'block', marginBottom: '8px' }}>Manager Comments & Feedback</label>
+              <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
+                Manager Qualitative Feedback
+              </label>
               <textarea
                 value={appraisalFeedback}
                 onChange={(e) => setAppraisalFeedback(e.target.value)}
                 rows={4}
-                style={{ width: '100%', padding: '10px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '13px', color: '#0F172A' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px' }}
               />
             </div>
-
             <button
-              onClick={() => setNotice(`Appraisal review submitted with rating ${appraisalRating}/5.`)}
-              style={{ background: '#4F46E5', color: '#FFFFFF', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: '800', fontSize: '14px', cursor: 'pointer', alignSelf: 'flex-start' }}
+              onClick={() => setNotice(`Performance Appraisal for ${person.name} recorded cleanly with ${appraisalRating} ★ rating.`)}
+              style={{
+                background: '#4F46E5',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '10px 18px',
+                borderRadius: '6px',
+                fontWeight: '700',
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
             >
-              Submit Performance Appraisal
+              Save & Finalize Appraisal Review
             </button>
           </div>
         </div>
