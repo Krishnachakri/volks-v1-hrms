@@ -1,0 +1,53 @@
+{
+  "name": "volks-hrms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VOLKS HRMS - Production Grade Temporal Identity & Employment Engine",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "tsx server.ts",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "tsx tests/volks_0_5_pilot_shadow_month.test.ts",
+    "test:v05": "tsx tests/volks_0_5_pilot_shadow_month.test.ts",
+    "test:v04a": "tsx tests/volks_0_4a_security_boundary.test.ts",
+    "test:v04": "tsx tests/volks_0_4_production_hardening.test.ts",
+    "test:v03": "npx playwright test",
+    "test:v02b": "tsx tests/volks_0_2b_browser_e2e.test.ts",
+    "test:v02a": "tsx tests/volks_0_2a_e2e_human_operable.test.ts",
+    "test:v02": "tsx tests/volks_0_2_ui_functional.test.ts",
+    "test:determinism": "tsx tests/volks_canonical_determinism_regression.test.ts",
+    "test:v01f": "tsx tests/volks_0_1f_calendar_hr_month.test.ts",
+    "test:v01e": "tsx tests/volks_0_1e_complete_hr_month.test.ts",
+    "test:v01d": "tsx tests/volks_0_1d_real_world_lifecycle.test.ts",
+    "test:v01c": "tsx tests/volks_0_1c_production_depth.test.ts",
+    "test:v01b": "tsx tests/volks_0_1b_operational_completeness.test.ts",
+    "test:v01": "tsx tests/volks_0_1_full_loop.test.ts",
+    "test:rc2": "tsx tests/rc2_causal_chain.test.ts",
+    "test:rc": "tsx tests/rc_persona_http.test.ts",
+    "test:volks10": "tsx tests/volks_1_0_journey.test.ts",
+    "test:suite": "tsx tests/workflow_intelligence.test.ts",
+    "test:kernel": "tsx tests/production_kernel.test.ts",
+    "test:concurrency": "tsx tests/concurrency_outbox.test.ts",
+    "test:enterprise": "tsx tests/enterprise_reality.test.ts",
+    "test:temporal": "tsx tests/temporal_integrity.test.ts",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.14",
+    "lucide-react": "^0.474.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0"
+  }
+}

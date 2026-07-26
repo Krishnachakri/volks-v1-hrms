@@ -1,0 +1,45 @@
+:root {
+  /* Professional Light Theme Tokens */
+  --bg-app: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-hover: #F1F5F9;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  
+  --border-color: #E2E8F0;
+  --border-accent: #CBD5E1;
+  
+  --brand-primary: #4F46E5;
+  --brand-primary-hover: #4338CA;
+  --brand-light: #EEF2FF;
+  --brand-text: #3730A3;
+  
+  --color-success: #059669;
+  --bg-success: #ECFDF5;
+  --border-success: #A7F3D0;
+  
+  --color-warning: #D97706;
+  --bg-warning: #FFFBEB;
+  --border-warning: #FDE68A;
+  
+  --color-danger: #E11D48;
+  --bg-danger: #FFF1F2;
+  --border-danger: #FECDD3;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
