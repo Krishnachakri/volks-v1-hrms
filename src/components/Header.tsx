@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Users, Clock, DollarSign, Award, Layers, ShieldCheck, Settings, Home, Search, Briefcase, Calendar } from 'lucide-react';
 
-export type PersonaRole = 'EMPLOYEE' | 'MANAGER' | 'DEPARTMENT_HEAD' | 'HR_ADMIN' | 'AUDITOR';
+export type PersonaRole = 'EMPLOYEE' | 'MANAGER' | 'DEPARTMENT_HEAD' | 'HR_ADMIN' | 'AUDITOR' | 'FINANCE' | 'SYSTEM_ADMIN';
 
 interface HeaderProps {
   activeTab: string;

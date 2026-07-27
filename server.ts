@@ -8,8 +8,73 @@ import { logger } from './lib/logger';
 import { verifyPassword, extractSessionToken, resolveAuthContext, hasRole, isManagerOf } from './lib/auth';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
-const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:4000';
 const DB_SLOW_QUERY_MS = process.env.DB_SLOW_QUERY_MS ? parseInt(process.env.DB_SLOW_QUERY_MS) : 250;
+
+// ------------------------------------------------------------
+// CORS — Environment-Aware Allowed Origins
+// In development: defaults to localhost origins.
+// In production: CORS_ALLOWED_ORIGINS env var MUST be set explicitly.
+// Credentialed cookie requests require a specific, non-wildcard origin.
+// ------------------------------------------------------------
+const RAW_CORS_ORIGINS = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:4000';
+const CORS_ALLOWED_LIST: string[] = RAW_CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+
+function resolveCorsOrigin(reqOrigin: string): string | null {
+  if (!reqOrigin) return null;
+  if (CORS_ALLOWED_LIST.includes(reqOrigin)) return reqOrigin;
+  return null;
+}
+
+// ------------------------------------------------------------
+// RATE LIMITER — Login endpoint sliding-window token bucket
+// Configurable via env vars. Never permanently locks accounts.
+// Window resets after LOGIN_RATE_WINDOW_MS (default 15 min).
+// TRUSTED_PROXY=true extracts IP from X-Forwarded-For header.
+// ------------------------------------------------------------
+const LOGIN_MAX_ATTEMPTS = process.env.LOGIN_MAX_ATTEMPTS ? parseInt(process.env.LOGIN_MAX_ATTEMPTS) : 10;
+const LOGIN_RATE_WINDOW_MS = process.env.LOGIN_RATE_WINDOW_MS ? parseInt(process.env.LOGIN_RATE_WINDOW_MS) : 15 * 60 * 1000;
+const TRUSTED_PROXY = process.env.TRUSTED_PROXY === 'true';
+
+const loginRateBuckets = new Map<string, { count: number; windowStart: number }>();
+
+function getClientIp(req: http.IncomingMessage): string {
+  if (TRUSTED_PROXY) {
+    const xff = req.headers['x-forwarded-for'];
+    if (xff) {
+      const ips = typeof xff === 'string' ? xff.split(',') : xff;
+      const ip = ips[0]?.trim();
+      if (ip) return ip;
+    }
+  }
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfterSec: number } {
+  const now = Date.now();
+  const bucket = loginRateBuckets.get(ip);
+
+  if (!bucket || now - bucket.windowStart > LOGIN_RATE_WINDOW_MS) {
+    // New window — reset
+    loginRateBuckets.set(ip, { count: 1, windowStart: now });
+    return { allowed: true, retryAfterSec: 0 };
+  }
+
+  if (bucket.count >= LOGIN_MAX_ATTEMPTS) {
+    const retryAfterMs = LOGIN_RATE_WINDOW_MS - (now - bucket.windowStart);
+    return { allowed: false, retryAfterSec: Math.ceil(retryAfterMs / 1000) };
+  }
+
+  bucket.count += 1;
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+// Periodically evict expired rate-limit buckets to prevent memory growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, bucket] of loginRateBuckets.entries()) {
+    if (now - bucket.windowStart > LOGIN_RATE_WINDOW_MS) loginRateBuckets.delete(ip);
+  }
+}, 5 * 60 * 1000);
 
 let outboxIntervalTimer: NodeJS.Timeout | null = null;
 let isShuttingDown = false;
@@ -185,16 +250,21 @@ async function startServer() {
     const startTime = Date.now();
     const requestId = (req.headers['x-request-id'] as string) || `req-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    const origin = req.headers.origin || '';
-    const allowedList = CORS_ALLOWED_ORIGINS.split(',');
-    const allowOrigin = allowedList.includes(origin) || CORS_ALLOWED_ORIGINS === '*' ? origin || '*' : allowedList[0];
+    // CORS — only set Allow-Origin when the request origin is explicitly permitted.
+    // Never use wildcard when credentials (cookies) are involved.
+    const reqOrigin = req.headers.origin || '';
+    const allowedOrigin = resolveCorsOrigin(reqOrigin);
 
-    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+    if (allowedOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-role, x-org-id, X-Request-ID');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
     res.setHeader('X-Request-ID', requestId);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -243,8 +313,25 @@ async function startServer() {
       const token = extractSessionToken(req);
       const auth = await resolveAuthContext(db, token);
 
-      // 1A. AUTHENTICATION / LOGIN
+      // 1A. AUTHENTICATION / LOGIN (rate-limited)
       if (pathname === '/api/auth/login' && req.method === 'POST') {
+        // Apply rate limiting before any DB work
+        const clientIp = getClientIp(req);
+        const rateCheck = checkLoginRateLimit(clientIp);
+        if (!rateCheck.allowed) {
+          logger.security('LOGIN_RATE_LIMITED', `Login rate limit exceeded for IP ${clientIp}`, {
+            requestId, path: pathname, statusCode: 429,
+          });
+          res.setHeader('Retry-After', String(rateCheck.retryAfterSec));
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            error: 'Too many login attempts. Please wait before trying again.',
+            retryAfterSeconds: rateCheck.retryAfterSec,
+            requestId,
+          }));
+          return;
+        }
+
         let body = '';
         req.on('data', (chunk) => (body += chunk));
         req.on('end', async () => {
