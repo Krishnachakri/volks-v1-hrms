@@ -3,7 +3,7 @@ import { Layers, ArrowRight, ShieldCheck, AlertTriangle, CheckCircle, HelpCircle
 
 interface LifecycleStudioProps {
   person: any;
-  onOpenEvidence: (title: string, details: any) => void;
+  onOpenEvidence?: (title: string, details: any) => void;
 }
 
 export const LifecycleStudio: React.FC<LifecycleStudioProps> = ({ person, onOpenEvidence }) => {

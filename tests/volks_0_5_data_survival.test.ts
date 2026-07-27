@@ -17,11 +17,11 @@ export async function runDataSurvivalDisasterRecoveryTest() {
 
   // 2. Export / Backup Database State
   console.log('[STEP 2] Performing database state dump / backup export...');
-  const personsData = await dbPrimary.query(`SELECT * FROM persons ORDER BY created_at ASC;`);
-  const engagementsData = await dbPrimary.query(`SELECT * FROM employment_engagements ORDER BY created_at ASC;`);
-  const changesData = await dbPrimary.query(`SELECT * FROM employment_changes ORDER BY valid_from ASC;`);
-  const attendanceData = await dbPrimary.query(`SELECT * FROM attendance_logs ORDER BY date ASC;`);
-  const payrollData = await dbPrimary.query(`SELECT * FROM payroll_runs ORDER BY processed_at ASC;`);
+  const personsData = await dbPrimary.query<any>(`SELECT * FROM persons ORDER BY created_at ASC;`);
+  const engagementsData = await dbPrimary.query<any>(`SELECT * FROM employment_engagements ORDER BY created_at ASC;`);
+  const changesData = await dbPrimary.query<any>(`SELECT * FROM employment_changes ORDER BY valid_from ASC;`);
+  const attendanceData = await dbPrimary.query<any>(`SELECT * FROM attendance_logs ORDER BY date ASC;`);
+  const payrollData = await dbPrimary.query<any>(`SELECT * FROM payroll_runs ORDER BY processed_at ASC;`);
 
   const backupSnapshot = {
     persons: personsData.rows,

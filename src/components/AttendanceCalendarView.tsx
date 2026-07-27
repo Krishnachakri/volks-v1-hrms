@@ -138,7 +138,7 @@ export const AttendanceCalendarView: React.FC<{ person: any }> = ({ person }) =>
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   minHeight: '76px',
                   transition: 'all 0.15s ease',
                 }}

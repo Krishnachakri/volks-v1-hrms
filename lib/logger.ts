@@ -1,5 +1,3 @@
-import { crypto } from '@electric-sql/pglite';
-
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogEvent {

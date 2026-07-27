@@ -9,6 +9,7 @@ import { LifecycleStudio } from './components/LifecycleStudio';
 import { WorkforceIntegrity } from './components/WorkforceIntegrity';
 import { InvestigationView } from './components/InvestigationView';
 import { CommandDashboard } from './components/CommandDashboard';
+import { LeaveView } from './components/LeaveView';
 
 interface Person {
   id: string;
@@ -143,7 +144,7 @@ export function App() {
 
         {/* LEAVE TAB */}
         {activeTab === 'leave' && (
-          <AttendanceCalendarView person={selectedPerson} />
+          <LeaveView person={selectedPerson} userRole={currentRole} />
         )}
 
         {/* PAY TAB */}

@@ -207,7 +207,7 @@ export async function runFullCapacityTestSuite(): Promise<ScenarioResult[]> {
     }
 
     if (pathname === '/api/reports/summary') {
-      const pRes = await db.query(`SELECT COUNT(*) FROM persons;`);
+      const pRes = await db.query<{ count: string }>(`SELECT COUNT(*) as count FROM persons;`);
       res.writeHead(200);
       res.end(JSON.stringify({ totalPeople: pRes.rows[0].count }));
       return;

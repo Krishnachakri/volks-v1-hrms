@@ -224,7 +224,20 @@ export async function seedDatabase() {
     [eng6, posMap['Operations Intern'], deptMap['People'], u6]
   );
 
-  await db.query(`INSERT INTO payroll_records (engagement_id, is_active) VALUES ($1, true);`, [eng6]);
+  // ------------------------------------------------------------
+  // Seed Default Leave Balances for Persons
+  // ------------------------------------------------------------
+  const persons = [p1, p2, p3, p4, p5, p6];
+  for (const pId of persons) {
+    await db.query(
+      `INSERT INTO leave_balances (person_id, leave_type, total_allowed, used)
+       VALUES ($1, 'Earned Leave', 12, 0),
+              ($1, 'Casual Leave', 6, 0),
+              ($1, 'Sick Leave', 6, 0)
+       ON CONFLICT (person_id, leave_type) DO NOTHING;`,
+      [pId]
+    );
+  }
 
   console.log('Seed database completed successfully with 6 persons and full bitemporal timelines.');
 }
