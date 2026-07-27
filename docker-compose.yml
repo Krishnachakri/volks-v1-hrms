@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  volks-db:
+    image: postgres:15-alpine
+    container_name: volks-db
+    restart: always
+    environment:
+      POSTGRES_DB: volks_db
+      POSTGRES_USER: volks_admin
+      POSTGRES_PASSWORD: secure_volks_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - volks_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volks_admin -d volks_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  volks-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: volks-app
+    restart: always
+    ports:
+      - "4000:4000"
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://volks_admin:secure_volks_password@volks-db:5432/volks_db
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:4000
+    depends_on:
+      volks-db:
+        condition: service_healthy
+
+volumes:
+  volks_postgres_data:
+    driver: local
